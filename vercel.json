@@ -1,3 +1,7 @@
 {
-  "cleanUrls": true
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/app", "destination": "/index.html" },
+    { "source": "/landing.html", "destination": "/landing.html" }
+  ]
 }
