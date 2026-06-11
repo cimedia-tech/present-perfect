@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription Successful ✦ PresentPerfect</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f0b18;
+            --bg-linen: #fdfbf7;
+            --charcoal: #1e1e1e;
+            --charcoal-light: #666666;
+            --gold-solid: #d4af37;
+            --gold-light: #f3e5ab;
+            --violet-solid: #8b5cf6;
+            --violet-glow: rgba(139, 92, 246, 0.15);
+            --gold-glow: rgba(212, 175, 55, 0.15);
+            --radius-lg: 24px;
+            --font-sans: 'Inter', sans-serif;
+            --font-serif: 'Playfair Display', serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #fff;
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Ambient background glow */
+        .glow-accent-warm {
+            position: absolute;
+            top: -10%;
+            left: 10%;
+            width: 80%;
+            height: 60%;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, rgba(0,0,0,0) 70%);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .glow-accent-cool {
+            position: absolute;
+            bottom: -10%;
+            right: 10%;
+            width: 80%;
+            height: 60%;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, rgba(0,0,0,0) 70%);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .success-card {
+            background: rgba(30, 24, 46, 0.7);
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            border-radius: var(--radius-lg);
+            padding: 48px 32px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(212, 175, 55, 0.05);
+            z-index: 2;
+            animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            color: var(--gold-solid);
+            margin-bottom: 24px;
+            display: inline-block;
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+            animation: pulse 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        h1 {
+            font-family: var(--font-serif);
+            font-weight: 500;
+            font-size: 2.2rem;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #fff 30%, var(--gold-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            color: #b0a8c4;
+            font-size: 1.05rem;
+            line-height: 1.6;
+            margin-bottom: 36px;
+        }
+
+        .btn-primary {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--gold-solid), #c5a059);
+            color: #000;
+            text-decoration: none;
+            padding: 16px 36px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(212, 175, 55, 0.5);
+        }
+
+        .redirect-notice {
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: #7b7193;
+        }
+    </style>
+</head>
+<body>
+    <div class="glow-accent-warm"></div>
+    <div class="glow-accent-cool"></div>
+
+    <div class="success-card">
+        <div class="success-icon">✦</div>
+        <h1>Welcome to PRO</h1>
+        <p>Your subscription is successful! You now have unlimited access to premium gift-finding workflows, expanded databases, and custom campaigns.</p>
+        <a href="index.html" class="btn-primary" id="btn-back">Enter Dashboard →</a>
+        <div class="redirect-notice" id="redirect-notice">Redirecting you to the app in 5 seconds...</div>
+    </div>
+
+    <script>
+        // Store PRO state locally so the client immediately displays PRO mode
+        localStorage.setItem('pp_is_pro', 'true');
+        
+        // Auto redirect to index.html after 5 seconds
+        let countdown = 5;
+        const timer = setInterval(() => {
+            countdown--;
+            const notice = document.getElementById('redirect-notice');
+            if (notice) {
+                notice.innerText = `Redirecting you to the app in ${countdown} seconds...`;
+            }
+            if (countdown <= 0) {
+                clearInterval(timer);
+                window.location.href = 'index.html';
+            }
+        }, 1000);
+
+        // Click override
+        document.getElementById('btn-back').addEventListener('click', () => {
+            clearInterval(timer);
+        });
+    </script>
+</body>
+</html>

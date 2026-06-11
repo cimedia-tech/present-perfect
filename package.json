@@ -1,0 +1,17 @@
+{
+  "name": "present-perfect",
+  "version": "1.0.0",
+  "description": "PresentPerfect Gift Advisor - Premium Gift Finder",
+  "main": "app.js",
+  "scripts": {
+    "start": "serve . -p 5050"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.43.4",
+    "raw-body": "^3.0.0",
+    "stripe": "^15.11.0"
+  },
+  "devDependencies": {
+    "serve": "^14.2.3"
+  }
+}

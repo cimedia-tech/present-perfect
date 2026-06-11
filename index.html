@@ -398,11 +398,11 @@
                     </ul>
                 </div>
                 <div class="pro-pricing">
-                    <div class="price-option">
+                    <div class="price-option" id="price-option-monthly" data-plan="monthly">
                         <span class="price-label">Monthly</span>
                         <span class="price-amount">$4.99<span class="price-period">/mo</span></span>
                     </div>
-                    <div class="price-option price-option--popular">
+                    <div class="price-option price-option--popular price-option--selected" id="price-option-annual" data-plan="annual">
                         <span class="price-badge">SAVE 33%</span>
                         <span class="price-label">Annual</span>
                         <span class="price-amount">$39.99<span class="price-period">/yr</span></span>
@@ -422,6 +422,8 @@
         </footer>
     </div>
 
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Script Entry -->
     <script src="app.js"></script>
 </body>

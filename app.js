@@ -1608,6 +1608,56 @@ let searchCount = parseInt(localStorage.getItem('pp_search_count') || '0');
 let searchDate = localStorage.getItem('pp_search_date') || '';
 let userEmail = localStorage.getItem('pp_user_email') || '';
 let isPro = localStorage.getItem('pp_is_pro') === 'true';
+let supabaseClient = null;
+
+// Initialize Supabase Client dynamically from serverless config
+async function initSupabase() {
+    try {
+        const res = await fetch('/api/config');
+        const config = await res.json();
+        if (config.supabaseUrl && config.supabaseAnonKey) {
+            supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+            console.log('[Supabase] Client initialized successfully.');
+            await syncUserStatus();
+        } else {
+            console.warn('[Supabase] Missing credentials. Operating in local-only offline mode.');
+            updateProUI();
+        }
+    } catch (err) {
+        console.error('[Supabase] Failed to initialize client:', err);
+        updateProUI();
+    }
+}
+
+// Sync subscription status with Vercel serverless database
+async function syncUserStatus() {
+    if (!userEmail) return;
+    try {
+        const res = await fetch(`/api/user-status?email=${encodeURIComponent(userEmail)}`);
+        const data = await res.json();
+        isPro = data.isPro === true;
+        localStorage.setItem('pp_is_pro', isPro.toString());
+        updateProUI();
+    } catch (err) {
+        console.error('[Billing] Failed to sync subscription status:', err);
+    }
+}
+
+// Update navigation Pro badge UI
+function updateProUI() {
+    const btnPro = document.getElementById('btn-open-pro-modal');
+    if (btnPro) {
+        if (isPro) {
+            btnPro.innerHTML = '✦ PRO ACTIVE';
+            btnPro.style.background = 'linear-gradient(135deg, #8b5cf6, #d4af37)';
+            btnPro.style.color = '#fff';
+        } else {
+            btnPro.innerHTML = '✦ PRO';
+            btnPro.style.background = '';
+            btnPro.style.color = '';
+        }
+    }
+}
 
 function resetDailySearchCount() {
     const today = new Date().toDateString();
@@ -1638,7 +1688,7 @@ function showProUpgrade() {
     document.getElementById('modal-pro-upgrade')?.classList.remove('hidden');
 }
 
-function handleEmailSubmit(e) {
+async function handleEmailSubmit(e) {
     e.preventDefault();
     const name = document.getElementById('capture-name')?.value?.trim();
     const email = document.getElementById('capture-email')?.value?.trim();
@@ -1650,10 +1700,26 @@ function handleEmailSubmit(e) {
     
     // Close modal
     document.getElementById('modal-email-capture')?.classList.add('hidden');
-    showToast('Welcome, ' + name + '! You now have full free access.');
+    showToast('Welcome, ' + name + '! You now have full free access. 🎉');
     
-    // TODO: Send to email service API (Brevo/Mailchimp)
-    console.log('[Lead Captured]', { name, email });
+    // Save lead to Supabase
+    if (supabaseClient) {
+        try {
+            const { error } = await supabaseClient
+                .from('profiles')
+                .upsert({ 
+                    email: email, 
+                    name: name,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'email' });
+            if (error) console.error('[Supabase] Error writing lead:', error);
+            else console.log('[Supabase] Lead saved successfully.');
+        } catch (err) {
+            console.error('[Supabase] Database upsert failed:', err);
+        }
+    }
+    
+    await syncUserStatus();
 }
 
 // --- State Variables ---
@@ -1723,6 +1789,8 @@ document.addEventListener('DOMContentLoaded', () => {
     updateTrackerUI();
     loadSharedWishlistFromURL();
     
+    // Initialize Supabase integration
+    initSupabase();
 });
 
 // --- Choice Deck UI helpers ---
@@ -1943,15 +2011,62 @@ function setupEventListeners() {
         document.getElementById('modal-pro-upgrade')?.classList.add('hidden');
     });
 
-    const btnStartTrial = document.getElementById('btn-start-pro-trial');
-    if (btnStartTrial) btnStartTrial.addEventListener('click', () => {
-        // TODO: Stripe checkout session
-        showToast('Trial activation coming soon!');
-        document.getElementById('modal-pro-upgrade')?.classList.add('hidden');
-    });
-}
+    // Interactive plan selection card toggles
+    let selectedPlan = 'annual';
+    const optMonthly = document.getElementById('price-option-monthly');
+    const optAnnual = document.getElementById('price-option-annual');
+    
+    if (optMonthly && optAnnual) {
+        optMonthly.addEventListener('click', () => {
+            selectedPlan = 'monthly';
+            optMonthly.classList.add('price-option--selected');
+            optAnnual.classList.remove('price-option--selected');
+        });
+        optAnnual.addEventListener('click', () => {
+            selectedPlan = 'annual';
+            optAnnual.classList.add('price-option--selected');
+            optMonthly.classList.remove('price-option--selected');
+        });
+    }
 
-// --- Navigation Logic ---
+    const btnStartTrial = document.getElementById('btn-start-pro-trial');
+    if (btnStartTrial) {
+        btnStartTrial.addEventListener('click', async () => {
+            if (!userEmail) {
+                document.getElementById('modal-pro-upgrade')?.classList.add('hidden');
+                showEmailCapture();
+                return;
+            }
+            
+            showToast('Redirecting to Stripe secure checkout... 💳');
+            
+            try {
+                const res = await fetch('/api/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        planType: selectedPlan,
+                        userEmail: userEmail,
+                        userId: userEmail
+                    })
+                });
+                
+                const data = await res.json();
+                if (data.url) {
+                    window.location.href = data.url;
+                } else {
+                    showToast('Failed to start checkout. Please try again.');
+                    console.error('[Billing] Checkout session error:', data);
+                }
+            } catch (err) {
+                console.error('[Billing] Stripe redirect failed:', err);
+                showToast('Network error. Please try again.');
+            }
+        });
+    }
+}
 function advanceStep() {
     if (currentStep < totalSteps) {
         document.getElementById(`step-${currentStep}`).classList.remove('active');
